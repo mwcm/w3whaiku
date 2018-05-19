@@ -8,7 +8,7 @@ from pyphen import Pyphen
 from glom import glom
 
 Word  = namedtuple('Word', 'word syllables')
-Line  = namedtuple('Line', 'words syllables')
+Line  = namedtuple('Line', 'words syllables number')
 Haiku = namedtuple('Haiku', 'lines syllables')
 
 LONG_MAX = 180
@@ -31,6 +31,7 @@ def count_syllables(dictionary, word):
     count = hyphenated.count('-') + 1
     return count, hyphenated
 
+
 def get_random_address(w3w, dic):
     counted_words = []
     random_lat = random.uniform(LAT_MIN, LAT_MAX)
@@ -45,23 +46,48 @@ def get_random_address(w3w, dic):
 
     return counted_words
 
-def write_haiku(w3w, dic):
 
+def get_line(w3w, dic):
+
+    three_words = get_random_address(w3w, dic)
+
+    if three_words.syllables > 6:
+        # must be line #2 (18 is max syllables; 18/3 = 6; middle line must have
+        # most syllables)
+        line = Line(words=three_words, syllables=three_words.syllables, number=2)
+    else:
+        # can be used as 1 or 3
+        line = Line(words=three_words, syllables=three_words.syllables, number=13)
+
+    return line
+
+
+def write_haiku(w3w, dic):
     # XXX: SMALLEST NUMBER OF SYLLABLES IN AN ADDRESS SEEMS TO BE ABOUT 4
 
-    # TODO: organize into EITHER 3 or 4 rows
+    # TODO: organize into EITHER 3 or 4 rows (start with 3)
     # TODO: 17 - 18 syllables
     # TODO: middle line MUST contain more syllables than other two
     # TODO: MAINTAIN WORD ORDER FROM ADDRESSES
 
-    while True:
+    haiku = Haiku()
+    all_words = []
+    while  19 > syllables:
+        if 18 >= syllables >= 17:
+            return haiku
+
         words = get_random_address(w3w, dic)
-        total_s = 0
+
+
+
         for w in words:
-            total_s += w.syllables
+            line_s += w.syllables
 
-        return words, total_s
 
+            all_words.append(words)
+        pass
+
+    write_haiku(w3w, dic)
 
 
 def main():
