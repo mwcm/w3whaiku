@@ -1,14 +1,16 @@
-import random
 import math
-from collections import namedtuple
+import json
+import random
 from os import environ
+from time import sleep
+from collections import namedtuple
 
 import what3words
-from pyphen import Pyphen
 from glom import glom
+from pyphen import Pyphen
 
-Word  = namedtuple('Word', 'word syllables')
-Line  = namedtuple('Line', 'words syllables number')
+Word  = namedtuple('Word', 'string syllables')
+Line  = namedtuple('Line', 'words syllables type')
 Haiku = namedtuple('Haiku', 'lines syllables')
 
 LONG_MAX = 180
@@ -16,6 +18,8 @@ LONG_MIN = -180
 
 LAT_MAX = 85.05112878
 LAT_MIN = -85.05112878
+
+api_hits = 0
 
 
 def setup():
@@ -33,78 +37,83 @@ def count_syllables(dictionary, word):
 
 
 def get_random_address(w3w, dic):
+    global api_hits
     counted_words = []
     random_lat = random.uniform(LAT_MIN, LAT_MAX)
     random_long = random.uniform(LONG_MIN, LONG_MAX)
     res = w3w.reverse(lng=random_long, lat=random_lat)
+
+    api_hits += 1
+    print('getting random address')
+    print('api hit: {}'.format(api_hits))
+    print('response: {}'.format(res))
+
     random_words = glom(res, 'words').split('.')
 
+    total_syllables = 0
     for w in random_words:
-        count, hyphenated = count_syllables(dic, w)
-        temp = Word(word=w, syllables=count)
+        syllable_count, hyphenated = count_syllables(dic, w)
+        temp = Word(string=w, syllables=syllable_count)
         counted_words.append(temp)
+        total_syllables += syllable_count
 
-    return counted_words
+    return counted_words, total_syllables
 
 
 def get_line(w3w, dic):
 
-    three_words = get_random_address(w3w, dic)
+    three_words, counted_syllables = get_random_address(w3w, dic)
 
-    if three_words.syllables > 6:
-        # must be line #2 (18 is max syllables; 18/3 = 6; middle line must have
-        # most syllables)
-        line = Line(words=three_words, syllables=three_words.syllables, number=2)
+    if counted_syllables > 6:
+        # line type 2: the middle line
+        # 18 is max syllables; 18/3 = 6; middle line must have most syllables
+        line = Line(words=three_words, syllables=counted_syllables, type=2)
     else:
-        # can be used as 1 or 3
-        line = Line(words=three_words, syllables=three_words.syllables, number=13)
+        # line type 1: the outer lines
+        # if 6 >= the syllable count than this is a shorter, outer line
+        line = Line(words=three_words, syllables=counted_syllables, type=1)
 
     return line
 
 
+def get_line_of_type(w3w, dic, type):
+
+    if type not in [1,2]:
+        return SystemError('invalid type')
+
+    while True:
+        line = get_line(w3w, dic)
+        if line.type == type:
+            return line
+        else:
+            sleep(1)
+            pass
+
+
 def write_haiku(w3w, dic):
-    # XXX: SMALLEST NUMBER OF SYLLABLES IN AN ADDRESS SEEMS TO BE ABOUT 4
+    while True:
+        line_one   = get_line_of_type(w3w, dic, 1)
+        line_two   = get_line_of_type(w3w, dic, 2)
+        line_three = get_line_of_type(w3w, dic, 1)
 
-    # TODO: organize into EITHER 3 or 4 rows (start with 3)
-    # TODO: 17 - 18 syllables
-    # TODO: middle line MUST contain more syllables than other two
-    # TODO: MAINTAIN WORD ORDER FROM ADDRESSES
+        haiku_syllables = line_one.syllables + \
+                        line_two.syllables + \
+                        line_three.syllables
 
-    haiku = Haiku()
-    all_words = []
-    while  19 > syllables:
-        if 18 >= syllables >= 17:
+        if 18 >= haiku_syllables >= 17:
+            haiku_lines = [line_one, line_two, line_three]
+            haiku = Haiku(lines=haiku_lines, syllables=haiku_syllables)
             return haiku
-
-        words = get_random_address(w3w, dic)
-
-
-
-        for w in words:
-            line_s += w.syllables
-
-
-            all_words.append(words)
         pass
-
-    write_haiku(w3w, dic)
 
 
 def main():
-
     w3w, dic = setup()
-    words, total = write_haiku(w3w, dic)
-    for word in words:
-        print(word)
-
-    print(total)
-    # words = get_random_address(w3w, dic)
-    # for line in haiku.lines:
-        # print(line)
-
-    # for word in words:
-        # print(word)
-
+    haiku = write_haiku(w3w, dic)
+    print(json.dumps(haiku._asdict()))
+    for line in haiku.lines:
+        print(line.words)
+        print('\n')
     raise SystemExit()
 
 
