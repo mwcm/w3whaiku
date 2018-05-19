@@ -47,7 +47,13 @@ def get_random_address(w3w, dic):
 
 def write_haiku(w3w, dic):
 
-    # XXX: SMALLES NUMBER OF SYLLABLES IN AN ADDRESS SEEMS TO BE ABOUT 4
+    # XXX: SMALLEST NUMBER OF SYLLABLES IN AN ADDRESS SEEMS TO BE ABOUT 4
+
+    # TODO: organize into EITHER 3 or 4 rows
+    # TODO: 17 - 18 syllables
+    # TODO: middle line MUST contain more syllables than other two
+    # TODO: MAINTAIN WORD ORDER FROM ADDRESSES
+
     while True:
         words = get_random_address(w3w, dic)
         total_s = 0
