@@ -45,14 +45,33 @@ def get_random_address(w3w, dic):
 
     return counted_words
 
+def write_haiku(w3w, dic):
+
+    # XXX: SMALLES NUMBER OF SYLLABLES IN AN ADDRESS SEEMS TO BE ABOUT 4
+    while True:
+        words = get_random_address(w3w, dic)
+        total_s = 0
+        for w in words:
+            total_s += w.syllables
+
+        return words, total_s
+
+
 
 def main():
 
     w3w, dic = setup()
-    words = get_random_address(w3w, dic)
-
+    words, total = write_haiku(w3w, dic)
     for word in words:
         print(word)
+
+    print(total)
+    # words = get_random_address(w3w, dic)
+    # for line in haiku.lines:
+        # print(line)
+
+    # for word in words:
+        # print(word)
 
     raise SystemExit()
 
