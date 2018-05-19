@@ -9,9 +9,9 @@ import what3words
 from glom import glom
 from pyphen import Pyphen
 
-Word  = namedtuple('Word', 'string syllables')
-Line  = namedtuple('Line', 'words syllables type')
-Haiku = namedtuple('Haiku', 'lines syllables')
+Word  = namedtuple('Word', 'syllables string')
+Line  = namedtuple('Line', 'map type words syllables string')
+Haiku = namedtuple('Haiku', 'maps lines syllables string')
 
 LONG_MAX = 180
 LONG_MIN = -180
@@ -43,12 +43,18 @@ def get_random_address(w3w, dic):
     random_long = random.uniform(LONG_MIN, LONG_MAX)
     res = w3w.reverse(lng=random_long, lat=random_lat)
 
-    api_hits += 1
-    print('getting random address')
-    print('api hit: {}'.format(api_hits))
-    print('response: {}'.format(res))
+    if glom(res, 'status.status') == 200:
+        api_hits += 1
+        # print('getting random address')
+        print('api hit: {}'.format(api_hits))
+        print('map: {}'.format(glom(res, 'map')))
+        print('response: {}'.format(res))
+
+    else:
+        raise SystemExit('failure response from api {}'.format(res))
 
     random_words = glom(res, 'words').split('.')
+    address_map = glom(res, 'map')
 
     total_syllables = 0
     for w in random_words:
@@ -57,30 +63,39 @@ def get_random_address(w3w, dic):
         counted_words.append(temp)
         total_syllables += syllable_count
 
-    return counted_words, total_syllables
+    return counted_words, total_syllables, address_map
 
 
 def get_line(w3w, dic):
 
-    three_words, counted_syllables = get_random_address(w3w, dic)
+    three_words, counted_syllables, m = get_random_address(w3w, dic)
 
     if counted_syllables > 6:
         # line type 2: the middle line
         # 18 is max syllables; 18/3 = 6; middle line must have most syllables
-        line = Line(words=three_words, syllables=counted_syllables, type=2)
+        line = Line(map=m,
+                    type=2,
+                    words=three_words,
+                    syllables=counted_syllables,
+                    string=' '.join([three_words[0].string,
+                                    three_words[1].string,
+                                    three_words[2].string]))
     else:
         # line type 1: the outer lines
         # if 6 >= the syllable count than this is a shorter, outer line
-        line = Line(words=three_words, syllables=counted_syllables, type=1)
-
+        line = Line(map=m,
+                    type=1,
+                    words=three_words,
+                    syllables=counted_syllables,
+                    string=' '.join([three_words[0].string,
+                                    three_words[1].string,
+                                    three_words[2].string]))
     return line
 
 
 def get_line_of_type(w3w, dic, type):
-
     if type not in [1,2]:
         return SystemError('invalid type')
-
     while True:
         line = get_line(w3w, dic)
         if line.type == type:
@@ -96,13 +111,22 @@ def write_haiku(w3w, dic):
         line_two   = get_line_of_type(w3w, dic, 2)
         line_three = get_line_of_type(w3w, dic, 1)
 
+
         haiku_syllables = line_one.syllables + \
-                        line_two.syllables + \
-                        line_three.syllables
+                          line_two.syllables + \
+                          line_three.syllables
 
         if 18 >= haiku_syllables >= 17:
+
             haiku_lines = [line_one, line_two, line_three]
-            haiku = Haiku(lines=haiku_lines, syllables=haiku_syllables)
+            haiku_maps  = [line_one.map, line_two.map, line_three.map]
+
+            haiku = Haiku(maps=haiku_maps,
+                          lines=haiku_lines,
+                          syllables=haiku_syllables,
+                          string='\n'.join([line_one.string,
+                                           line_two.string,
+                                           line_three.string]))
             return haiku
         pass
 
@@ -111,9 +135,8 @@ def main():
     w3w, dic = setup()
     haiku = write_haiku(w3w, dic)
     print(json.dumps(haiku._asdict()))
-    for line in haiku.lines:
-        print(line.words)
-        print('\n')
+    print('\n')
+    print(haiku.string)
     raise SystemExit()
 
 
