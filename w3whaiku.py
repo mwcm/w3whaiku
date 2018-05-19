@@ -78,8 +78,8 @@ def get_line(w3w, dic):
                     words=three_words,
                     syllables=counted_syllables,
                     string=' '.join([three_words[0].string,
-                                    three_words[1].string,
-                                    three_words[2].string]))
+                                     three_words[1].string,
+                                     three_words[2].string]))
     else:
         # line type 1: the outer lines
         # if 6 >= the syllable count than this is a shorter, outer line
@@ -88,8 +88,8 @@ def get_line(w3w, dic):
                     words=three_words,
                     syllables=counted_syllables,
                     string=' '.join([three_words[0].string,
-                                    three_words[1].string,
-                                    three_words[2].string]))
+                                     three_words[1].string,
+                                     three_words[2].string]))
     return line
 
 
@@ -120,13 +120,12 @@ def write_haiku(w3w, dic):
 
             haiku_lines = [line_one, line_two, line_three]
             haiku_maps  = [line_one.map, line_two.map, line_three.map]
+            haiku_str   = '\n'.join([line_one.string, line_two.string, line_three.string])
 
             haiku = Haiku(maps=haiku_maps,
                           lines=haiku_lines,
                           syllables=haiku_syllables,
-                          string='\n'.join([line_one.string,
-                                           line_two.string,
-                                           line_three.string]))
+                          string=haiku_str)
             return haiku
         pass
 
@@ -137,6 +136,8 @@ def main():
     print(json.dumps(haiku._asdict()))
     print('\n')
     print(haiku.string)
+    print('\n')
+    print('\n'.join(haiku.maps))
     raise SystemExit()
 
 
