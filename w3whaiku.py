@@ -6,6 +6,7 @@ from time import sleep
 from collections import namedtuple
 
 import tweepy
+import short_url
 import what3words
 from glom import glom
 from pyphen import Pyphen
@@ -142,17 +143,24 @@ def write_haiku(w3w, dic):
             return haiku
         pass
 
+def shorten(url):
+    gurl = 'http://goo.gl/api/url?url=%s' % urllib.quote(url)
+    req = urllib3.Request(gurl, data='')
+    req.add_header('User-Agent', 'toolbar')
+    results = json.load(urllib3.urlopen(req))
+    return results['short_url']
 
 def main():
-    w3w, tw, dic = setup()
-    haiku = write_haiku(w3w, dic)
-    maps = '\n'.join(haiku.maps)
-    tweet = '{} \n {}'.format(haiku, maps)
-    tw.update_status(tweet)
-    print('\n')
-    print(haiku.string)
-    print('\n')
-    print('\n'.join(haiku.maps))
+    print(shorten('www.google.com'))
+    # w3w, tw, dic = setup()
+    # haiku = write_haiku(w3w, dic)
+    # maps = '\n'.join(haiku.maps)
+    # tweet = '{} \n {}'.format(haiku, maps)
+    # tw.update_status(tweet)
+    # print('\n')
+    # print(haiku.string)
+    # print('\n')
+    # print('\n'.join(haiku.maps))
 
     raise SystemExit()
 
