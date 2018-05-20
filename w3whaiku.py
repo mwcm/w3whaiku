@@ -5,9 +5,12 @@ from os import environ
 from time import sleep
 from collections import namedtuple
 
+import tweepy
 import what3words
 from glom import glom
 from pyphen import Pyphen
+
+# what3ko
 
 Word  = namedtuple('Word', 'syllables string')
 Line  = namedtuple('Line', 'map type words syllables string')
@@ -29,7 +32,16 @@ def setup():
     key = environ['w3wkey']
     w3w = what3words.Geocoder(key)
     dic = Pyphen(lang='en')
-    return w3w, dic
+
+    auth = tweepy.OAuthHandler(environ['consumer_key'],
+                               environ['consumer_secret'])
+
+    auth.set_access_token(environ['access_token'],
+                          environ['access_secret'])
+
+    tw = tweepy.API(auth)
+
+    return w3w, tw, dic
 
 
 def count_syllables(dictionary, word):
@@ -113,7 +125,6 @@ def write_haiku(w3w, dic):
         line_two   = get_line_of_type(w3w, dic, 2)
         line_three = get_line_of_type(w3w, dic, 1)
 
-
         haiku_syllables = line_one.syllables + \
                           line_two.syllables + \
                           line_three.syllables
@@ -133,13 +144,16 @@ def write_haiku(w3w, dic):
 
 
 def main():
-    w3w, dic = setup()
+    w3w, tw, dic = setup()
     haiku = write_haiku(w3w, dic)
-    print(json.dumps(haiku._asdict()))
+    maps = '\n'.join(haiku.maps)
+    tweet = '{} \n {}'.format(haiku, maps)
+    tw.update_status(tweet)
     print('\n')
     print(haiku.string)
     print('\n')
     print('\n'.join(haiku.maps))
+
     raise SystemExit()
 
 
