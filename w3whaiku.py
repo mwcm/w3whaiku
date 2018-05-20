@@ -20,6 +20,7 @@ LAT_MAX = 85.05112878
 LAT_MIN = -85.05112878
 
 MAX_SYLLABLES = 18
+MIN_SYLLABLES = 17
 
 api_hits = 0
 
@@ -117,7 +118,7 @@ def write_haiku(w3w, dic):
                           line_two.syllables + \
                           line_three.syllables
 
-        if 18 >= haiku_syllables >= 17:
+        if MAX_SYLLABLES >= haiku_syllables >= MIN_SYLLABLES:
 
             haiku_lines = [line_one, line_two, line_three]
             haiku_maps  = [line_one.map, line_two.map, line_three.map]
