@@ -1,21 +1,21 @@
 import math
 import json
 import random
+import requests
 from os import environ
 from time import sleep
 from collections import namedtuple
 
-from bitly_api import bitly_api
 import tweepy
 import what3words
 from glom import glom
 from pyphen import Pyphen
 
-# what3ko
-
 Word  = namedtuple('Word', 'syllables string')
 Line  = namedtuple('Line', 'map type words syllables string')
 Haiku = namedtuple('Haiku', 'maps lines syllables string')
+
+ENDPOINT = 'https://api-ssl.bitly.com/v3/shorten'
 
 LONG_MAX = 180
 LONG_MIN = -180
@@ -41,7 +41,6 @@ def setup():
                           environ['access_secret'])
 
     tw = tweepy.API(auth)
-    bitly_api
 
     return w3w, tw, dic
 
@@ -51,6 +50,20 @@ def count_syllables(dictionary, word):
     # add one for first syllable
     count      = hyphenated.count('-') + 1
     return count, hyphenated
+
+
+def shorten(url):
+    payload = {
+        'access_token': environ['bitly_access'],
+        'uri': url,
+        'format':'json'
+    }
+
+    response = requests.get(ENDPOINT, params=payload)
+
+    res = response.json()
+    print(res)
+    return glom(res, 'data.url')
 
 
 def get_random_address(w3w, dic):
@@ -134,8 +147,13 @@ def write_haiku(w3w, dic):
         if MAX_SYLLABLES >= haiku_syllables >= MIN_SYLLABLES:
 
             haiku_lines = [line_one, line_two, line_three]
-            haiku_maps  = [line_one.map, line_two.map, line_three.map]
             haiku_str   = '\n'.join([line_one.string, line_two.string, line_three.string])
+            haiku_maps  = [shorten(line_one.map),
+                           shorten(line_two.map),
+                           shorten(line_three.map)]
+            haiku_maps  = [line_one.map,
+                           line_two.map,
+                           line_three.map]
 
             haiku = Haiku(maps=haiku_maps,
                           lines=haiku_lines,
@@ -149,12 +167,9 @@ def main():
     w3w, tw, dic = setup()
     haiku = write_haiku(w3w, dic)
     maps = '\n'.join(haiku.maps)
-    tweet = '{} \n {}'.format(haiku, maps)
+    tweet = '{}\n{}'.format(haiku.string, maps)
+    print(tweet)
     tw.update_status(tweet, tweet_mode='extended')
-    print('\n')
-    print(haiku.string)
-    print('\n')
-    print('\n'.join(haiku.maps))
 
     raise SystemExit()
 
