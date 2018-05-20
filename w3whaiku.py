@@ -96,8 +96,8 @@ def get_line(w3w, dic):
 
 
 def get_line_of_type(w3w, dic, requested_type):
-    if type not in [1,2]:
-        return SystemError('invalid type')
+    if requested_type not in [1,2]:
+        raise SystemError('invalid type')
     while True:
         line = get_line(w3w, dic)
         if line.type == requested_type:
