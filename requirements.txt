@@ -14,10 +14,10 @@ ptpython==0.41
 Pygments==2.2.0
 Pyphen==0.9.4
 PySocks==1.6.8
-requests==2.18.4
+requests==2.20.0
 requests-oauthlib==0.8.0
 six==1.11.0
 tweepy==3.6.0
-urllib3==1.22
+urllib3==1.23.0
 wcwidth==0.1.7
 what3words==2.2.1
